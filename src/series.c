@@ -2,14 +2,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-int findDiff(double *nums, int amnt) {
+double *original_nums;
+int original_amnt;
+
+void findDiff(double *nums, int amnt, int depth) {
     int i, newamnt;
     double *diffs;
     
     newamnt = amnt - 1;
     
     if (newamnt == 1) {
-        return -10000;
+        printf("A pattern was not found.\n");
+        return;
     }
     
     diffs = calloc(newamnt, sizeof(double));
@@ -24,12 +28,21 @@ int findDiff(double *nums, int amnt) {
     for (i = 1; i < newamnt; i++) {
         if (diffs[i] != diffs[0]) {
             /* recur more */
-            return findDiff(diffs, newamnt) + 1;
+            findDiff(diffs, newamnt, depth + 1);
+            free(diffs);
+            return;
         }
     }
     
+    /* found difference */
+    printf("A pattern was found at the %dth level!\n", depth);
     printf("Common difference: %lf\n", diffs[0]);
-    return 1;
+    
+    if (depth == 0) {
+        printf("Equation: t(n) = %lfn + %lf\n", diffs[0], original_nums[0]);
+    }
+    free(diffs);
+    return;
 }
 
 int main() {
@@ -51,8 +64,9 @@ int main() {
         scanf("%lf",&nums[i]);
     }
     
-    depth = findDiff(nums, amnt);
-    if (depth > 0) printf("A pattern was found at the %dth level!\n", depth);
-    else printf("A pattern was not found.\n");
+    original_nums = nums;
+    original_amnt = amnt;
+    
+    findDiff(nums, amnt, 0);
     free(nums);
 }
