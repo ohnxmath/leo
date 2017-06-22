@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "leo.h"
-
+/*
 int main() {
     char buf[513];
     
@@ -8,3 +8,4 @@ int main() {
     
     printf("%s\n", buf);
 }
+*/
