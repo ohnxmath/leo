@@ -12,8 +12,17 @@ static int map_operator_precendence(char a) {
     }
 }
 
+static int map_operator_associativity(char a) {
+    switch(a) {
+    case '^': return 0;
+    default: return 1;
+    }
+}
+
 static int operator_is_preceding(char a, char b) {
-    return map_operator_precendence(a) >= map_operator_precendence(b);
+    return map_operator_associativity(b) ?
+            map_operator_precendence(a) >= map_operator_precendence(b):
+            map_operator_precendence(a) >  map_operator_precendence(b);
 }
 
 char *strdup(const char *a) {
