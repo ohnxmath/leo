@@ -18,6 +18,8 @@ typedef struct _queue {
 queue *queue_new();
 /* remove an item from the queue */
 void *queue_dequeue(queue *q);
+/* get the first item in the queue */
+void *queue_first(queue *q);
 /* add an item to the queue */
 int queue_enqueue(queue *q, void *data);
 /* destroy the queue */

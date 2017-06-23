@@ -26,6 +26,13 @@ void *queue_dequeue(queue *q) {/* lazy dequeue */
                           /* equivalent to doing (q->queue++)[0] */
 }
 
+void *queue_first(queue *q) {
+    /* overflow check */
+    if (q->queue_len == 0) return NULL;
+
+    return *(q->queue); /* equivalent to doing (q->queue++)[0] */
+}
+
 int queue_enqueue(queue *q, void *data) {
     /* (q->queue_buf + q->queue_buf_len - q->queue) is the length of memory available for queue data storage */
     
@@ -42,7 +49,7 @@ int queue_enqueue(queue *q, void *data) {
             /* update pointer references */
             q->queue_buf = q->queue = tmp;
         } else { /* we still have room, we just need to shift everything over */
-            memmove(q->queue_buf, q->queue, q->queue_len);
+            memmove(q->queue_buf, q->queue, q->queue_len * sizeof(void *));
             q->queue = q->queue_buf;
         }
     }
@@ -95,7 +102,7 @@ int main() {
     }
     puts("-----------");
 
-    /* test additino of items normal case */
+    /* test addition of items normal case */
     queue_enqueue(q, one);
 
     /* test addition of items when memmove is required */
