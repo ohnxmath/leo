@@ -31,7 +31,8 @@ double *rpn_calc(queue *in) {
             /* If there are fewer than 2 values on the stack */
             if (av == NULL || bv == NULL) {
                 /* (Error) The user has not input sufficient values in the expression. */
-                
+                free(av);
+                free(bv);
                 printf("(Error) The user has not input sufficient values in the expression.\n");
                 goto err_cleanup;
             }
