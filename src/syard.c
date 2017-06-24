@@ -101,7 +101,7 @@ queue *syard_run(const char *in) {
 		       mismatched parentheses. */
 		    if (op == NULL || (op != NULL && *op != '(')) {
 		        /* mismatched parentheses */
-		        printf("mismatched parentheses; extra )\n");
+		        printf("! mismatched parentheses; extra )\n");
 		        goto err_cleanup;
 		    }
 		    /* pop the left bracket from the stack. */
@@ -122,11 +122,11 @@ queue *syard_run(const char *in) {
         /* if the operator token on the top of the stack is a bracket, then
 		there are mismatched parentheses. */
 		if (op != NULL && *op == '(') {
-            printf("mismatched parentheses; extra (\n");
+            printf("~ mismatched parentheses; extra (\n");
             goto err_cleanup;
 		}
     } else {
-        printf("unknown character `%c` in equation\n", *(tkc->pos));
+        printf("! unknown character `%c` in equation\n", *(tkc->pos));
         goto err_cleanup;
     }
 

@@ -33,7 +33,7 @@ double *rpn_calc(queue *in) {
                 /* (Error) The user has not input sufficient values in the expression. */
                 free(av);
                 free(bv);
-                printf("(Error) The user has not input sufficient values in the expression.\n");
+                printf("! Not enough values for operator `%c`\n", *((char *)((struct syard_var *)tok + 1)));
                 goto err_cleanup;
             }
 
@@ -86,7 +86,7 @@ double *rpn_calc(queue *in) {
     
     /* Otherwise, there are more values in the stack */
     /* (Error) The user input has too many values. */
-    printf("(Error) The user input has too many values.\n");
+    printf("! Too many values inputted\n");
     err_cleanup:
     free(tok);
     queue_foreach(in, syard_queue_cleanup, NULL);
