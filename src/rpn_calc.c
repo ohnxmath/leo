@@ -31,8 +31,9 @@ double *rpn_calc(queue *in) {
             /* If there are fewer than 2 values on the stack */
             if (av == NULL || bv == NULL) {
                 /* (Error) The user has not input sufficient values in the expression. */
+                
                 printf("(Error) The user has not input sufficient values in the expression.\n");
-                return NULL;
+                goto err_cleanup;
             }
 
             /* Get values */
@@ -85,6 +86,8 @@ double *rpn_calc(queue *in) {
     /* Otherwise, there are more values in the stack */
     /* (Error) The user input has too many values. */
     printf("(Error) The user input has too many values.\n");
+    err_cleanup:
+    free(tok);
     queue_foreach(in, syard_queue_cleanup, NULL);
     queue_destroy(in);
     stack_foreach(s, syard_queue_cleanup, NULL);
