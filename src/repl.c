@@ -3,6 +3,7 @@
 #include "stack.h"
 #include "tokenizer.h"
 #include "syard.h"
+#include "rpn_calc.h"
 
 /* simple wrapper around puts() to support queue_foreach */
 void testfunc(void *d, void *c) {
@@ -19,6 +20,7 @@ void testfunc(void *d, void *c) {
 int main() {
     char buf[513];
     queue *q;
+    double *r;
 
     while (1) {
         printf("> ");
@@ -29,8 +31,10 @@ int main() {
         if (q == NULL) continue;
         queue_foreach(q, testfunc, NULL);
         printf("\n");
-        
-        queue_foreach(q, syard_queue_cleanup, NULL);
-        queue_destroy(q);
+
+        r = rpn_calc(q);
+        if (r == NULL) continue;
+        printf("= %lf\n", *r);
+        free(r);
     }
 }

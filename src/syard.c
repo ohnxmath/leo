@@ -37,7 +37,7 @@ char *strdup(const char *a) {
     return dup;
 }
 
-void *create_double_data(char *repr) {
+static void *create_double_data(char *repr) {
     struct syard_var *v = malloc(sizeof(struct syard_var) + sizeof(double));
     v->type = TYPE_DOUBLE;
     /* advance past the type variable to reach the data storage for double */
@@ -45,7 +45,7 @@ void *create_double_data(char *repr) {
     return v;
 }
 
-void *create_char_data(char in) {
+static void *create_char_data(char in) {
     struct syard_var *v = malloc(sizeof(struct syard_var) + sizeof(char));
     v->type = TYPE_CHAR;
     /* advance past the type variable to reach the data storage for char */
