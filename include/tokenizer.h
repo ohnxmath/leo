@@ -7,6 +7,9 @@ typedef enum _tokenizer_type {
     TOKEN_OPERATOR,
     TOKEN_LBRACKET,
     TOKEN_RBRACKET,
+    TOKEN_FUNCTION,
+    TOKEN_COMMA,
+    TOKEN_VARIABLE,
     TOKEN_END,
     TOKEN_UNKNOWN
 } tokenizer_type;

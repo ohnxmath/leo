@@ -78,9 +78,23 @@ char *tokenizer_next(tokenizer_ctx *ctx) {
     } else if (*pos == '\0') { /* end */
         ctx->type = TOKEN_END;
         return NULL;
-    } else { /* unknown */
-        ctx->type = TOKEN_UNKNOWN;
-        return NULL;
+    } else if (*pos == ',') { /* comma from function */
+        /* pass the operator char and set type */
+        pos++;
+        ctx->type = TOKEN_COMMA;
+    } else {
+        /* keep going until we reach an open bracket to signify the start
+           of a function, or a space/operator char to signify a variable*/
+        while (*pos != 0 && !char_eq(*pos, operator_chars)
+                && !char_eq(*pos, "(), ")) pos++;
+
+        if (*pos == '(') {
+            /* treat as function name */
+            ctx->type = TOKEN_FUNCTION;
+        } else {
+            /* treat as variable name */
+            ctx->type = TOKEN_VARIABLE;
+        }
     }
 
     /* replace the char with NULL, */
@@ -127,6 +141,12 @@ const char *tokenizer_type_tostring(tokenizer_type tt) {
         return "OPEN BRACKET";
     case TOKEN_RBRACKET:
         return "CLOSE BRACKET";
+    case TOKEN_FUNCTION:
+        return "FUNCTION BEGIN";
+    case TOKEN_COMMA:
+        return "FUNCTION COMMA";
+    case TOKEN_VARIABLE:
+        return "VARIABLE";
     case TOKEN_END:
         return "END OF STRING";
     default:
@@ -143,14 +163,14 @@ int main() {
 
     /* tokenizer does not allocate new memory outside of the context since it
      * edits in-place, so we need to strdup() */
-    teststr = strdup("12    -(3  /4 * 5) + 6 - 7.89");
+    teststr = strdup("12 * x +sin(y-theta)  - min(z, 3  /4, (0-3) * 5) + 6 - 7.89");
 
     /* test setting the tokenizer string */
     tokenizer_reset(ctx, teststr);
     
     /* output token types */
     while ((tok = tokenizer_next(ctx)) != NULL) {
-        printf("token: `%s`; type %s\n", tok, tokenizer_type_tostring(ctx->type));
+        printf("token: `%s`;\t\ttype `%s`\n", tok, tokenizer_type_tostring(ctx->type));
     }
 
     /* check ending reason */
