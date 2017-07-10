@@ -7,13 +7,16 @@
 
 enum syard_tvar {
     TYPE_DOUBLE,
-    TYPE_CHAR
+    TYPE_CHAR,
+    TYPE_VAR,
+    TYPE_FUNCTION
 };
 
 struct syard_var {
     enum syard_tvar type;
 };
 
+void *syard_create_double_raw(double nbr);
 queue *syard_run(const char *in);
 void syard_queue_cleanup(void *d, void *c);
 

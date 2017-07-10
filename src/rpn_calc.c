@@ -1,14 +1,6 @@
 #include "rpn_calc.h"
 
-static void *create_double_data(double repr) {
-    struct syard_var *v = malloc(sizeof(struct syard_var) + sizeof(double));
-    v->type = TYPE_DOUBLE;
-    /* advance past the type variable to reach the data storage for double */
-    *((double *)(v + 1)) = repr;
-    return v;
-}
-
-double *rpn_calc(queue *in) {
+double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
     stack *s;
     struct syard_var *tok;
 
@@ -16,10 +8,21 @@ double *rpn_calc(queue *in) {
 
     /* While there are input tokens left; Read the next token from input. */
     while ((tok = (struct syard_var *)queue_dequeue(in)) != NULL) {
-        /* If the token is a value */
-        if (tok->type == TYPE_DOUBLE) {
+        if (tok->type == TYPE_DOUBLE) { /* If the token is a value */
             /* Push it onto the stack. */
             stack_push(s, tok);
+        } else if (tok->type == TYPE_VAR) { /* If the token is a variable, resolve its value now */
+            /* Push it onto the stack. */
+            char *vn = (char *)(tok + 1);
+            if (!variable_resolver) {
+                printf("! Variables not supported\n");
+                goto err_cleanup;
+            }
+
+            /* Resolve the variable */
+            stack_push(s, syard_create_double_raw(variable_resolver(vn)));
+            /* free the memory used to store the token */
+            free(tok);
         } else { /* Otherwise, the token is an operator */
             /* It is already known that the operator takes 2 arguments. */
             struct syard_var *av, *bv;
@@ -62,7 +65,7 @@ double *rpn_calc(queue *in) {
                 break;
             }
             /* Push the returned results, if any, back onto the stack. */
-            stack_push(s, create_double_data(c));
+            stack_push(s, syard_create_double_raw(c));
 
             /* Free the memory used for the operator and data */
             free(av);
@@ -75,9 +78,17 @@ double *rpn_calc(queue *in) {
     tok = stack_pop(s);
     if (stack_top(s) == NULL) {
         /* That value is the result of the calculation. */
-        double result = *((double *)(tok + 1));
-        double *result_ptr = malloc(sizeof(double));
+        double result, *result_ptr;
+
+        /* verify tok is not null */
+        if (tok == NULL) result = 0;
+        else result = *((double *)(tok + 1));
+
+        /* set pointer */
+        result_ptr = malloc(sizeof(double));
         *result_ptr = result;
+
+        /* clean up */
         queue_destroy(in);
         stack_destroy(s);
         free(tok);

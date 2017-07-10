@@ -6,6 +6,6 @@
 #include "queue.h"
 #include "syard.h"
 
-double *rpn_calc(queue *in);
+double *rpn_calc(queue *in, double (*variable_resolver)(const char*));
 
 #endif /* __RPN_CALC_INC */

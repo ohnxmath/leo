@@ -31,7 +31,7 @@ clean:
 ################################################################################
 
 repl: $(OUTPUT) objs/repl.o
-	$(CC) objs/repl.o -L. -lleo -lm -o leo
+	$(CC) objs/repl.o -L. -lleo -lm -o leo $(CFLAGS)
 
 .PHONY: drepl
 drepl: debug repl

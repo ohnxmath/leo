@@ -37,11 +37,19 @@ char *strdup(const char *a) {
     return dup;
 }
 
-static void *create_double_data(char *repr) {
+static void *syard_create_double(char *repr) {
     struct syard_var *v = malloc(sizeof(struct syard_var) + sizeof(double));
     v->type = TYPE_DOUBLE;
     /* advance past the type variable to reach the data storage for double */
     sscanf(repr, "%lf", ((double *)(v + 1)));
+    return v;
+}
+
+void *syard_create_double_raw(double nbr) {
+    struct syard_var *v = malloc(sizeof(struct syard_var) + sizeof(double));
+    v->type = TYPE_DOUBLE;
+    /* advance past the type variable to reach the data storage for double */
+    *((double *)(v + 1)) = nbr;
     return v;
 }
 
@@ -52,6 +60,29 @@ static void *create_char_data(char in) {
     *((char *)(v + 1)) = in;
     return v;
 }
+
+static void *create_var_data(char *in) {
+    size_t in_len;
+    struct syard_var *v;
+    in_len = strlen(in) + 1; /* plus 1 for null */
+    v = malloc(sizeof(struct syard_var) + in_len);
+    v->type = TYPE_VAR;
+    /* advance past the type variable to reach the data storage for char */
+    memcpy(((char *)(v + 1)), in, in_len);
+    return v;
+}
+#if 0
+static void *create_function_data(char *in) {
+    size_t in_len;
+    struct syard_var *v;
+    in_len = strlen(in) + 1; /* plus 1 for null */
+    v = malloc(sizeof(struct syard_var) + in_len);
+    v->type = TYPE_FUNCTION;
+    /* advance past the type variable to reach the data storage for char */
+    memcpy(((char *)(v + 1)), in, in_len);
+    return v;
+}
+#endif
 
 /* reverse polish https://en.wikipedia.org/wiki/Shunting-yard_algorithm */
 queue *syard_run(const char *in) {
@@ -65,6 +96,7 @@ queue *syard_run(const char *in) {
     q = queue_new();
     tkc = tokenizer_new();
     newstr = strdup(in);
+    newstr[strcspn(newstr, "\r\n")] = 0; /* strip newlines */
     tokenizer_reset(tkc, newstr);
 
     /* while there are tokens to be read, read a token. */
@@ -72,7 +104,7 @@ queue *syard_run(const char *in) {
         switch (tkc->type) {
         /* if the token is a number, then push it to the output queue. */
         case TOKEN_NUMBER:
-            queue_enqueue(q, create_double_data(tok));
+            queue_enqueue(q, syard_create_double(tok));
             break;
         /* if the token is an operator, then: */
         case TOKEN_OPERATOR:
@@ -106,6 +138,17 @@ queue *syard_run(const char *in) {
 		    }
 		    /* pop the left bracket from the stack. */
 	        stack_pop(s);
+
+            /* check if stack top is a function and if so, pop it */
+            /* TODO: we need to be able to distinguish a function token from a variable token. */
+            break;
+        case TOKEN_FUNCTION:
+        case TOKEN_COMMA:
+            printf("! unsupported.\n");
+            goto err_cleanup;
+            break;
+        case TOKEN_VARIABLE:
+            queue_enqueue(q, create_var_data(tok));
             break;
         default:
             break;
@@ -143,7 +186,6 @@ queue *syard_run(const char *in) {
     free(newstr);
     return NULL;
 }
-
 
 void syard_queue_cleanup(void *d, void *c) {
     free(d);
