@@ -25,14 +25,14 @@ double *run_function(const char *name, size_t argc, double *argv) {
     /* open libm */
     handle = dlopen(NULL, RTLD_LAZY);
     if (!handle) { /* verify success */
-        fprintf(stderr, "Failed to open self: %s\n", dlerror());
+        fprintf(stderr, "! failed to support calling functions: %s\n", dlerror());
         return NULL;
     }
 
     /* find the address of function */
     f = dlsym(handle, name);
     if (f == NULL) { /* verify success */
-        fprintf(stderr, "Failed to find function `%s`: %s\n", name, dlerror());
+        fprintf(stderr, "! failed to call function `%s`: %s\n", name, dlerror());
         return NULL;
     }
     

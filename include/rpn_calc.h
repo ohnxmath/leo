@@ -5,6 +5,7 @@
 #include "stack.h"
 #include "queue.h"
 #include "syard.h"
+#include "run_function.h"
 
 double *rpn_calc(queue *in, double (*variable_resolver)(const char*));
 

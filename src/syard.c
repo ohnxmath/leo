@@ -71,26 +71,29 @@ static void *create_var_data(char *in) {
     memcpy(((char *)(v + 1)), in, in_len);
     return v;
 }
-#if 0
-static void *create_function_data(char *in) {
+
+static void *create_function_data(short numargs, char *in) {
     size_t in_len;
     struct syard_var *v;
     in_len = strlen(in) + 1; /* plus 1 for null */
-    v = malloc(sizeof(struct syard_var) + in_len);
+    v = malloc(sizeof(struct syard_var) + sizeof(short) + in_len);
     v->type = TYPE_FUNCTION;
-    /* advance past the type variable to reach the data storage for char */
-    memcpy(((char *)(v + 1)), in, in_len);
+    /* advance past the type variable to reach the data storage for short */
+    *((short *)(v + 1)) = numargs;
+    /* advance past the short variable to reach the data storage for char */
+    memcpy(((char *)(((short *)(v + 1)) + 1)), in, in_len);
     return v;
 }
-#endif
 
 /* reverse polish https://en.wikipedia.org/wiki/Shunting-yard_algorithm */
 queue *syard_run(const char *in) {
     /* init */
     stack *s;
     queue *q;
+    int len;
     tokenizer_ctx *tkc;
     char *tok, *op, *newstr;
+    char comma = ',';
 
     s = stack_new();
     q = queue_new();
@@ -140,12 +143,40 @@ queue *syard_run(const char *in) {
 	        stack_pop(s);
 
             /* check if stack top is a function and if so, pop it */
-            /* TODO: we need to be able to distinguish a function token from a variable token. */
+            if (stack_top(s) != NULL && *((char *)stack_top(s)) == '\0') {
+                /* this was a function */
+                char *ps;
+                void *p;
+
+                /* pop item from stack */
+                ps = (char *)stack_pop(s);
+
+                /* remove leading null */
+                memmove(ps, ps+1, strlen(ps+1)+1);
+
+                /* create function data */
+                p = create_function_data(1, ps);
+                free(ps);
+
+                /* enqueue */
+                queue_enqueue(q, p);
+            }
             break;
         case TOKEN_FUNCTION:
+            len = strlen(tok);
+            op = calloc(len + 2, sizeof(char));
+            op[0] = '\0';
+            op[len] = '\0';
+            memcpy(op+1, tok, len);
+            stack_push(s, op);
+            break;
         case TOKEN_COMMA:
-            printf("! unsupported.\n");
-            goto err_cleanup;
+            while (((op = stack_top(s)) != NULL) && *op != ',' && *op != '(') {
+                /* pop operators from the operator stack onto the output queue. */
+                queue_enqueue(q, create_char_data(*(char *)stack_pop(s)));
+            }
+            if (*op == ',') stack_pop(s);
+            stack_push(s, &comma);
             break;
         case TOKEN_VARIABLE:
             queue_enqueue(q, create_var_data(tok));
@@ -165,7 +196,7 @@ queue *syard_run(const char *in) {
         /* if the operator token on the top of the stack is a bracket, then
 		there are mismatched parentheses. */
 		if (op != NULL && *op == '(') {
-            printf("~ mismatched parentheses; extra (\n");
+            printf("! mismatched parentheses; extra (\n");
             goto err_cleanup;
 		}
     } else {

@@ -3,6 +3,7 @@
 double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
     stack *s;
     struct syard_var *tok;
+    int i;
 
     s = stack_new();
 
@@ -22,6 +23,38 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
             /* Resolve the variable */
             stack_push(s, syard_create_double_raw(variable_resolver(vn)));
             /* free the memory used to store the token */
+            free(tok);
+        } else if (tok->type == TYPE_CHAR && *((char *)((struct syard_var *)tok + 1)) == ',') {
+            /* skip */
+        } else if (tok->type == TYPE_FUNCTION) { /* if the token is a function, resolve its value now */
+            double *args, *nbr;
+            struct syard_var *a;
+
+            args = malloc(*((short *)(tok + 1)) * sizeof(double));
+
+            for (i = *((short *)(tok + 1)) - 1; i >= 0; i--) {
+                a = (struct syard_var *)stack_pop(s);
+
+                if (a == NULL) {
+                    printf("! Not enough values for function `%s`\n", ((char *)(((short *)(tok + 1)) + 1)));
+                    free(args);
+                    goto err_cleanup;
+                }
+
+                args[i] = *((double *)(a + 1));
+                free((double *)a);
+            }
+
+            nbr = run_function(((char *)(((short *)(tok + 1)) + 1)), *((short *)(tok + 1)), args);
+
+            if (nbr == NULL) {
+                free(args);
+                goto err_cleanup;
+            }
+
+            stack_push(s, syard_create_double_raw(*nbr));
+            free(nbr);
+            free(args);
             free(tok);
         } else { /* Otherwise, the token is an operator */
             /* It is already known that the operator takes 2 arguments. */

@@ -6,6 +6,7 @@
 static char buf[513];
 static void *n;
 
+#ifdef __DEBUG
 /* simple wrapper around puts() to support queue_foreach */
 void testfunc(void *d, void *c) {
     switch(((struct syard_var *)d)->type) {
@@ -19,10 +20,11 @@ void testfunc(void *d, void *c) {
     printf("(v)%s ", ((char *)((struct syard_var *)d + 1)));
     break;
     case TYPE_FUNCTION:
-    printf("(f)%s ", ((char *)((struct syard_var *)d + 1)));
+    printf("(f)%s ", ((char *)(((short *)((struct syard_var *)d + 1)) + 1)));
     break;
     }
 }
+#endif
 
 double variable_resolver(const char* name) {
     double a;
@@ -45,12 +47,14 @@ int main() {
 
         q = syard_run(buf);
         if (q == NULL) continue;
+#ifdef __DEBUG
         queue_foreach(q, testfunc, NULL);
         printf("\n");
+#endif
 
         r = rpn_calc(q, variable_resolver);
         if (r == NULL) continue;
-        printf("= %g\t%lf\n", *r, *r);
+        printf("= %g\n", *r);
         free(r);
     }
     puts("");
