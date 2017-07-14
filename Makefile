@@ -1,7 +1,7 @@
 INCLUDES=-Iinclude/
 CFLAGS=$(INCLUDES) -Wall -Werror -pedantic
 
-OBJ=objs/queue.o objs/stack.o objs/syard.o objs/tokenizer.o objs/rpn_calc.o
+OBJ=objs/queue.o objs/stack.o objs/syard.o objs/tokenizer.o objs/rpn_calc.o objs/run_function.o
 OUTPUT=libleo.a
 
 .PHONY: debug

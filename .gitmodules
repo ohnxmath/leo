@@ -1,0 +1,3 @@
+[submodule "src/template/goatee"]
+	path = src/template/goatee
+	url = https://github.com/ohnx/goatee.git
