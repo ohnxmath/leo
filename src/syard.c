@@ -88,14 +88,16 @@ static void *create_function_data(short numargs, char *in) {
 /* reverse polish https://en.wikipedia.org/wiki/Shunting-yard_algorithm */
 queue *syard_run(const char *in) {
     /* init */
-    stack *s;
+    stack *s, *arity;
     queue *q;
     int len;
     tokenizer_ctx *tkc;
     char *tok, *op, *newstr;
     char comma = ',';
+    int *arn;
 
     s = stack_new();
+    arity = stack_new();
     q = queue_new();
     tkc = tokenizer_new();
     newstr = strdup(in);
@@ -154,9 +156,13 @@ queue *syard_run(const char *in) {
                 /* remove leading null */
                 memmove(ps, ps+1, strlen(ps+1)+1);
 
+                /* fetch function arity */
+                arn = stack_pop(arity);
+
                 /* create function data */
-                p = create_function_data(1, ps);
+                p = create_function_data(*arn, ps);
                 free(ps);
+                free(arn);
 
                 /* enqueue */
                 queue_enqueue(q, p);
@@ -169,6 +175,10 @@ queue *syard_run(const char *in) {
             op[len] = '\0';
             memcpy(op+1, tok, len);
             stack_push(s, op);
+
+            arn = malloc(sizeof(int));
+            *arn = 1;
+            stack_push(arity, arn);
             break;
         case TOKEN_COMMA:
             while (((op = stack_top(s)) != NULL) && *op != ',' && *op != '(') {
@@ -177,6 +187,10 @@ queue *syard_run(const char *in) {
             }
             if (*op == ',') stack_pop(s);
             stack_push(s, &comma);
+
+            arn = stack_pop(arity);
+            (*arn)++;
+            stack_push(arity, arn);
             break;
         case TOKEN_VARIABLE:
             queue_enqueue(q, create_var_data(tok));
@@ -211,6 +225,8 @@ queue *syard_run(const char *in) {
 
     err_cleanup:
     stack_destroy(s);
+    stack_foreach(s, syard_queue_cleanup, NULL);
+    stack_destroy(arity);
     tokenizer_destroy(tkc);
     queue_foreach(q, syard_queue_cleanup, NULL);
     queue_destroy(q);

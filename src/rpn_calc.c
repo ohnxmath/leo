@@ -36,6 +36,7 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
                 a = (struct syard_var *)stack_pop(s);
 
                 if (a == NULL) {
+                    if (i == 0) break;
                     printf("! Not enough values for function `%s`\n", ((char *)(((short *)(tok + 1)) + 1)));
                     free(args);
                     goto err_cleanup;
