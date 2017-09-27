@@ -33,9 +33,10 @@ clean:
 #                             COMMAND LINE STUFF                               #
 ################################################################################
 
-repl: $(OUTPUT) objs/repl.o
-	$(CC) objs/repl.o -L. -lleo -lm -ldl -o leo $(CFLAGS)
+repl: $(OUTPUT) objs/repl.o objs/hashmap.o
+	$(CC) objs/repl.o objs/hashmap.o -L. -lleo -lm -ldl -o leo $(CFLAGS)
 
 .PHONY: drepl
-drepl: debug objs/repl.o
-	$(CC) objs/repl.o -L. -lleo -lm -ldl -o leo $(CFLAGS)
+drepl: CFLAGS += -g -O0 -D__DEBUG
+drepl: debug objs/repl.o objs/hashmap.o
+	$(CC) objs/repl.o objs/hashmap.o -L. -lleo -lm -ldl -o leo $(CFLAGS)
