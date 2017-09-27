@@ -58,4 +58,5 @@ int main() {
         free(r);
     }
     puts("");
+    return 0;
 }

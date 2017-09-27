@@ -219,13 +219,13 @@ queue *syard_run(const char *in) {
     }
 
     stack_destroy(s);
+    stack_destroy(arity);
     tokenizer_destroy(tkc);
     free(newstr);
     return q;
 
     err_cleanup:
     stack_destroy(s);
-    stack_foreach(s, syard_queue_cleanup, NULL);
     stack_destroy(arity);
     tokenizer_destroy(tkc);
     queue_foreach(q, syard_queue_cleanup, NULL);

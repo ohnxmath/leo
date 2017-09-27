@@ -23,7 +23,7 @@ double *run_function(const char *name, size_t argc, double *argv) {
     rt = malloc(sizeof(double));
 
     /* open libm */
-    handle = dlopen(NULL, RTLD_LAZY);
+    handle = dlopen("libm.so.6", RTLD_LAZY);
     if (!handle) { /* verify success */
         fprintf(stderr, "! failed to support calling functions: %s\n", dlerror());
         return NULL;

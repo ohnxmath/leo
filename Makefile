@@ -13,6 +13,9 @@ debug: $(OUTPUT)
 #                                SOURCES STUFF                                 #
 ################################################################################
 
+src/run_function.c:
+	cd src/template; ./run_function.sh; cd ../../;
+
 objs/%.o: src/%.c
 	@mkdir -p objs/
 	$(CC) -c -o $@ $< $(CFLAGS) $(EXTRA)
@@ -34,5 +37,5 @@ repl: $(OUTPUT) objs/repl.o
 	$(CC) objs/repl.o -L. -lleo -lm -ldl -o leo $(CFLAGS)
 
 .PHONY: drepl
-drepl: debug
+drepl: debug objs/repl.o
 	$(CC) objs/repl.o -L. -lleo -lm -ldl -o leo $(CFLAGS)
