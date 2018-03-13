@@ -26,7 +26,7 @@ typedef int (*hashmap_iterator)(void *context, const char *key, void *value);
 
 hashmap *hashmap_new();
 void hashmap_put(hashmap *in, const char *key, void *value);
-void hashmap_remove(hashmap *in, const char *key, void *value);
+void hashmap_remove(hashmap *in, const char *key);
 void *hashmap_get(hashmap *in, const char *key);
 int hashmap_iterate(hashmap *in, hashmap_iterator iter, void *context);
 void hashmap_empty(hashmap *in);

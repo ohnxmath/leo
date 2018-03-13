@@ -175,6 +175,34 @@ void hashmap_put(hashmap *in, const char *key, void *value) {
     in->num_entry++;
 }
 
+void hashmap_remove(hashmap *in, const char *key) {
+    unsigned short hash;
+    hashmap_entry_list *hel;
+    hashmap_entry *he;
+    int i;
+
+    /* get hash value */
+    hash = crc8_block((const unsigned char *)key, (long)strlen(key));
+    hel = &in->buckets[hash];
+
+    /* loop through all the key/value pairs with that hash */
+    for (i = 0; i < hel->vlen; i++) {
+        he = &hel->values[i];
+        if (!strcmp(key, he->key)) goto found;
+    }
+    /* no such key */
+    return;
+
+    /* success */
+    found:
+    /* free the key */
+    free(he->key);
+    /* copy over the values past this to over this */
+    memcpy(hel->values + i, hel->values + i + 1, sizeof(hashmap_entry) * (hel->vlen - i));
+    /* decrease the length */
+    hel->vlen--;
+}
+
 void *hashmap_get(hashmap *in, const char *key) {
     unsigned short hash;
     hashmap_entry_list *hel;
