@@ -20,8 +20,6 @@ double *run_function(const char *name, size_t argc, double *argv) {
     void *f, *handle;
     double ret, *rt;
 
-    rt = malloc(sizeof(double));
-
     /* open libm */
     handle = dlopen("libm.so.6", RTLD_LAZY);
     if (!handle) { /* verify success */
@@ -35,7 +33,9 @@ double *run_function(const char *name, size_t argc, double *argv) {
         fprintf(stderr, "! failed to call function `%s`: %s\n", name, dlerror());
         return NULL;
     }
-    
+
+    rt = malloc(sizeof(double));
+
     switch (argc) {/* generated code */{% for i=0,7 do %}
     {% if i == 7 then %}default:{%
     ri = 6
