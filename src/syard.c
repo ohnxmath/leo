@@ -211,6 +211,11 @@ queue *syard_run(const char *in) {
             stack_push(arity, arn);
             break;
         case TOKEN_VARIABLE:
+            /* special case: last token was a number or rbracket and we have variable now */
+            if (tok_last == TOKEN_NUMBER || tok_last == TOKEN_RBRACKET) {
+                /* push a * sign with high precendence */
+                stack_push(s, (void *)&mul);
+            }
             queue_enqueue(q, create_var_data(tok));
             break;
         default:
