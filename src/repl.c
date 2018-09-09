@@ -45,16 +45,19 @@ int hm_cleaner(void *context, const char *key, void *value) {
 int main() {
     char *o, *p;
     queue *q;
-    double *r;
+    double *r, *s;
     double *pi = malloc(sizeof(double));
     double *e  = malloc(sizeof(double));
+    double *ans = malloc(sizeof(double));
 
     *pi = 3.1415926535;
     *e  = 2.7182818285;
+    *ans = 0;
 
     hm = hashmap_new();
     hashmap_put(hm, "pi", pi);
     hashmap_put(hm, "e", e);
+    hashmap_put(hm, "ans", ans);
 
     while (1) {
         printf("> ");
@@ -84,9 +87,20 @@ int main() {
         if (r == NULL) continue;
 
         printf("= %g\n", *r);
+
+        /* store ans */
+        *ans = *r;
+
         if (p != buf) {
             /* equals sign present */
-            hashmap_put(hm, buf, r);
+            if ((s = hashmap_get(hm, buf)) != NULL) {
+                /* existing value, just overwrite it */
+                *s = *r;
+                free(r);
+            } else {
+                /* new value */
+                hashmap_put(hm, buf, r);
+            }
         } else {
             /* no equals sign, so we're done with the number now */
             free(r);
