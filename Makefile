@@ -1,7 +1,8 @@
 INCLUDES=-Iinclude/
 CFLAGS=$(INCLUDES) -Wall -Werror -pedantic
 
-OBJ=objs/queue.o objs/stack.o objs/syard.o objs/tokenizer.o objs/rpn_calc.o objs/run_function.o
+OBJ=objs/queue.o objs/stack.o objs/syard.o objs/tokenizer.o objs/rpn_calc.o
+OBJ_NONANSI=objs/run_function.o
 OUTPUT=libleo.a
 
 .PHONY: debug
@@ -18,14 +19,18 @@ src/run_function.c:
 
 objs/%.o: src/%.c
 	@mkdir -p objs/
+	$(CC) -c -o $@ $< $(CFLAGS) -ansi $(EXTRA)
+
+objs/run_function.o: src/run_function.c
+	@mkdir -p objs/
 	$(CC) -c -o $@ $< $(CFLAGS) $(EXTRA)
 
-$(OUTPUT): $(OBJ)
-	ar rcs $(OUTPUT) $(OBJ)
+$(OUTPUT): $(OBJ) $(OBJ_NONANSI)
+	ar rcs $(OUTPUT) $^
 
 .PHONY: clean
 clean:
-	-rm -f $(OBJ) objs/repl.o
+	-rm -f $(OBJ) $(OBJ_NONANSI) objs/repl.o objs/hashmap.o
 	-rm -f $(OUTPUT)
 	-rm -f leo
 

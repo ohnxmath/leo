@@ -1,6 +1,23 @@
 #include "rpn_calc.h"
 
-double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
+int rpn_check_fwl(char *f, char **wl) {
+    /* empty whitelist, no functions allowed */
+    if (wl == NULL) return 0;
+
+    /* check wildcard */
+    if (*(*wl) == '*') return 1;
+
+    /* loop while the elements aren't null */
+    while (*wl != NULL) {
+        /* check if the strings are equal, and if yes, return allowed */
+        if (!strcmp(*(wl++), f)) return 1;
+    }
+
+    /* default: function not found, deny */
+    return 0;
+}
+
+double *rpn_calc(queue *in, double (*variable_resolver)(const char*), char **func_wl) {
     stack *s;
     struct syard_var *tok;
     int i;
@@ -29,6 +46,12 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
         } else if (tok->type == TYPE_FUNCTION) { /* if the token is a function, resolve its value now */
             double *args, *nbr;
             struct syard_var *a;
+
+            /* check if function is allowed */
+            if (!rpn_check_fwl((char *)(((short *)(tok + 1)) + 1), func_wl)) {
+                printf("! function `%s` not whitelisted\n", ((char *)(((short *)(tok + 1)) + 1)));
+                goto err_cleanup;
+            }
 
             args = malloc(*((short *)(tok + 1)) * sizeof(double));
 

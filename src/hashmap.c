@@ -1,5 +1,13 @@
 #include "hashmap.h"
 
+/* strdup for ANSI */
+char *_strdup(const char *a) {
+    int len = strlen(a) + 1;
+    char *r = malloc(len);
+    if (r) memcpy(r, a, len);
+    return r;
+}
+
 /* CRC8 */
 #define CRC8_TOPBIT (1 << 7)
 #define CRC8_POLYNOMIAL 0x9b
@@ -168,7 +176,7 @@ void hashmap_put(hashmap *in, const char *key, void *value) {
     /* jump to end of hashmap entry list */
     he = &hel->values[hel->vlen-1];
     
-    he->key = strdup(key);
+    he->key = _strdup(key);
     he->value = value;
     
     /* success */

@@ -1,9 +1,16 @@
 #include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
 #include "queue.h"
 #include "syard.h"
 #include "rpn_calc.h"
 #include "hashmap.h"
 
+static char *func_wl[] = {
+    "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "exp", "exp2",
+    "exp10", "log", "log10", "log2", "logb", "pow", "sqrt", "cbrt", "hypot",
+    "expm1", "log1p", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "erf",
+    "erfc", "lgamma", "gamma", "tgamma", "j0", "j1", "y0", "y1", NULL};
 static char buf[513];
 static void *n;
 static hashmap *hm;
@@ -40,6 +47,12 @@ double variable_resolver(const char* name) {
 int hm_cleaner(void *context, const char *key, void *value) {
     free(value);
     return 0;
+}
+
+int hasSR = 0;
+double randd() {
+    if (!(hasSR++)) srand(time(NULL));
+    return (double)rand() / (double)RAND_MAX;
 }
 
 int main() {
@@ -83,7 +96,7 @@ int main() {
         printf("\n");
 #endif
 
-        r = rpn_calc(q, variable_resolver);
+        r = rpn_calc(q, variable_resolver, func_wl);
         if (r == NULL) continue;
 
         printf("= %g\n", *r);
