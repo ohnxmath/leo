@@ -18,6 +18,7 @@ struct syard_var {
 
 void *syard_create_double_raw(double nbr);
 queue *syard_run(const char *in);
+void syard_string_cleanup(void *d, void *c);
 void syard_queue_cleanup(void *d, void *c);
 
 #endif /* __SHUNTINGYARD_INC */

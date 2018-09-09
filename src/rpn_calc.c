@@ -37,7 +37,7 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
 
                 if (a == NULL) {
                     if (i == 0) break;
-                    printf("! Not enough values for function `%s`\n", ((char *)(((short *)(tok + 1)) + 1)));
+                    printf("! not enough values for function `%s`\n", ((char *)(((short *)(tok + 1)) + 1)));
                     free(args);
                     goto err_cleanup;
                 }
@@ -67,7 +67,7 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
                 bv = (struct syard_var *)stack_pop(s);
                 if (bv == NULL) {
                     free(bv);
-                    printf("! Not enough values for operator `-`\n");
+                    printf("! not enough values for operator `-`\n");
                     goto err_cleanup;
                 }
                 b = ((double *)(bv + 1));
@@ -85,7 +85,7 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
                 /* (Error) The user has not input sufficient values in the expression. */
                 free(av);
                 free(bv);
-                printf("! Not enough values for operator `%c`\n", *((char *)((struct syard_var *)tok + 1)));
+                printf("! not enough values for operator `%c`\n", *((char *)((struct syard_var *)tok + 1)));
                 goto err_cleanup;
             }
 
@@ -147,7 +147,7 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
     
     /* Otherwise, there are more values in the stack */
     /* (Error) The user input has too many values. */
-    printf("! Too many values inputted\n");
+    printf("! too many values inputted\n");
     err_cleanup:
     free(tok);
     queue_foreach(in, syard_queue_cleanup, NULL);

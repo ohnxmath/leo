@@ -249,13 +249,20 @@ queue *syard_run(const char *in) {
     return q;
 
     err_cleanup:
+    stack_foreach(s, syard_string_cleanup, NULL);
     stack_destroy(s);
+    stack_foreach(arity, syard_queue_cleanup, NULL);
     stack_destroy(arity);
     tokenizer_destroy(tkc);
     queue_foreach(q, syard_queue_cleanup, NULL);
     queue_destroy(q);
     free(newstr);
     return NULL;
+}
+
+void syard_string_cleanup(void *d, void *c) {
+    /* only functions need to be freed */
+    if (*((char *)d) == '\0') free(d);
 }
 
 void syard_queue_cleanup(void *d, void *c) {
