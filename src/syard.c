@@ -3,6 +3,7 @@
 
 static int map_operator_precendence(char a) {
     switch (a) {
+    case 'm': return 15;
     case '^': return 10;
     case '*':
     case '/': return 6;
@@ -93,7 +94,8 @@ queue *syard_run(const char *in) {
     int len;
     tokenizer_ctx *tkc;
     char *tok, *op, *newstr;
-    char comma = ',';
+    tokenizer_type tok_last = TOKEN_LBRACKET;
+    char comma = ',', mul = '*';
     int *arn;
 
     s = stack_new();
@@ -109,10 +111,21 @@ queue *syard_run(const char *in) {
         switch (tkc->type) {
         /* if the token is a number, then push it to the output queue. */
         case TOKEN_NUMBER:
+            /* special case: last token was a rbracket and we have number now */
+            if (tok_last == TOKEN_RBRACKET) {
+                /* push a * sign with high precendence */
+                stack_push(s, (void *)&mul);
+            }
             queue_enqueue(q, syard_create_double(tok));
             break;
         /* if the token is an operator, then: */
         case TOKEN_OPERATOR:
+            /* special case: last token was left bracket or operator and we have a minus sign now */
+            if ((tok_last == TOKEN_LBRACKET || tok_last == TOKEN_OPERATOR) && (*tok == '-')) {
+                /* change the operator to the special 'm' operator that we'll deal with in rpn_calc */
+                *tok = 'm';
+            }
+
             /* while there is an operator at the top of the operator stack with
 			   greater than or equal to precedence: */
             while (((op = stack_top(s)) != NULL) && operator_is_preceding(*op, *tok)) {
@@ -124,6 +137,11 @@ queue *syard_run(const char *in) {
             break;
         /* if the token is a left bracket (i.e. "("), then: */
         case TOKEN_LBRACKET:
+            /* special case: last token was a number or rbracket and we have lbracket now */
+            if (tok_last == TOKEN_NUMBER || tok_last == TOKEN_RBRACKET) {
+                /* push a * sign with high precendence */
+                stack_push(s, (void *)&mul);
+            }
             /* push it onto the operator stack */
             stack_push(s, tok);
             break;
@@ -198,6 +216,7 @@ queue *syard_run(const char *in) {
         default:
             break;
         }
+        tok_last = tkc->type;
     }
     
     /* if there are no more tokens to read: */

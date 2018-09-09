@@ -58,9 +58,24 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
             free(args);
             free(tok);
         } else { /* Otherwise, the token is an operator */
-            /* It is already known that the operator takes 2 arguments. */
             struct syard_var *av, *bv;
             double *a, *b, c;
+
+            /* unary operators check first */
+            switch (*((char *)((struct syard_var *)tok + 1))) {
+            case 'm':
+                bv = (struct syard_var *)stack_pop(s);
+                if (bv == NULL) {
+                    free(bv);
+                    printf("! Not enough values for operator `-`\n");
+                    goto err_cleanup;
+                }
+                b = ((double *)(bv + 1));
+                c = 0-*b;
+                goto single;
+            default: break;
+            }
+
             /* Pop the top 2 values from the stack. */
             av = (struct syard_var *)stack_pop(s);
             bv = (struct syard_var *)stack_pop(s);
@@ -98,13 +113,14 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*)) {
                 /* unrecognized... */
                 break;
             }
-            /* Push the returned results, if any, back onto the stack. */
-            stack_push(s, syard_create_double_raw(c));
-
             /* Free the memory used for the operator and data */
             free(av);
+            single:
             free(bv);
             free(tok);
+
+            /* Push the returned results, if any, back onto the stack. */
+            stack_push(s, syard_create_double_raw(c));
         }
     }
 
