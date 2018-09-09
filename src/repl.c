@@ -32,13 +32,9 @@ double variable_resolver(const char* name) {
     double *b;
 
     if ((b = hashmap_get(hm, name)) != NULL) return *b;
-    b = malloc(sizeof(double));
-    printf("value for variable `%s`? ", name);
-    n = fgets(buf, 512, stdin);
-    if (!n) return 0;
-    sscanf(buf, "%lf", b);
-    hashmap_put(hm, name, b);
-    return *b;
+
+    fprintf(stderr, "! unknown variable `%s`\n", name);
+    return 0;
 }
 
 int hm_cleaner(void *context, const char *key, void *value) {
@@ -47,6 +43,7 @@ int hm_cleaner(void *context, const char *key, void *value) {
 }
 
 int main() {
+    char *o, *p;
     queue *q;
     double *r;
     double *pi = malloc(sizeof(double));
@@ -65,7 +62,18 @@ int main() {
         if (!n) break;
         if (*buf == '\n') continue; /* skip if only newline */
 
-        q = syard_run(buf);
+        /* check if there is an equals sign */
+        for (p = buf; (*p != '\0') && (*p != '='); p++);
+        if (*p == '\0') p = buf;
+        else { /* equals sign present */
+            /* check for spaces */
+            for (o = buf; (*o != ' ') && (*o != '='); o++);
+            *o = '\0';
+
+            p++; /* skip equals sign when parsing equation */
+        }
+
+        q = syard_run(p);
         if (q == NULL) continue;
 #ifdef __DEBUG
         queue_foreach(q, testfunc, NULL);
@@ -74,8 +82,15 @@ int main() {
 
         r = rpn_calc(q, variable_resolver);
         if (r == NULL) continue;
+
         printf("= %g\n", *r);
-        free(r);
+        if (p != buf) {
+            /* equals sign present */
+            hashmap_put(hm, buf, r);
+        } else {
+            /* no equals sign, so we're done with the number now */
+            free(r);
+        }
     }
 
     hashmap_iterate(hm, hm_cleaner, NULL);
