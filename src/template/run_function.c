@@ -38,10 +38,12 @@ double *run_function(const char *name, size_t argc, double *argv) {
     f = dlsym(handle, name);
     if (f == NULL) { /* verify success */
         fprintf(stderr, "! failed to call function `%s`: %s\n", name, dlerror());
+        dlclose(handle);
         return NULL;
     }
 
     rt = malloc(sizeof(double));
+    ret = 0;
 
     /* handle errors */
     memset(&sa, 0, sizeof(struct sigaction));
@@ -53,6 +55,8 @@ double *run_function(const char *name, size_t argc, double *argv) {
     if (setjmp(point) == 1) {
         /* a segfault occurred */
         fprintf(stderr, "! a segfault occurred while trying to call function %s(%zu)\n", name, argc);
+        free(rt);
+        dlclose(handle);
         return NULL;
     }
 
@@ -86,6 +90,7 @@ double *run_function(const char *name, size_t argc, double *argv) {
         break;{% end %}
     }
 
+    dlclose(handle);
     *rt = ret;
     return rt;
 }
