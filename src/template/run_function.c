@@ -7,6 +7,12 @@ vars = {"xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"}
  */
 #include "run_function.h"
 
+sigjmp_buf point;
+
+static void handler(int sig, siginfo_t *siginfo, void *arg) {
+   longjmp(point, 1);
+}
+
 /*
  * call a x86-64 cdecl function
  * 
@@ -19,6 +25,7 @@ vars = {"xmm0", "xmm1", "xmm2", "xmm3", "xmm4", "xmm5", "xmm6", "xmm7"}
 double *run_function(const char *name, size_t argc, double *argv) {
     void *f, *handle;
     double ret, *rt;
+    struct sigaction sa;
 
     /* open libm */
     handle = dlopen("libm.so.6", RTLD_LAZY);
@@ -35,6 +42,19 @@ double *run_function(const char *name, size_t argc, double *argv) {
     }
 
     rt = malloc(sizeof(double));
+
+    /* handle errors */
+    memset(&sa, 0, sizeof(struct sigaction));
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags     = SA_NODEFER;
+    sa.sa_sigaction = handler;
+    sigaction(SIGSEGV, &sa, NULL);
+    /* catch error if setjmp() returns 1 */
+    if (setjmp(point) == 1) {
+        /* a segfault occurred */
+        fprintf(stderr, "! a segfault occurred while trying to call function %s(%zu)\n", name, argc);
+        return NULL;
+    }
 
     switch (argc) {/* generated code */{% for i=0,7 do %}
     {% if i == 7 then %}default:{%

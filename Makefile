@@ -1,5 +1,5 @@
 INCLUDES=-Iinclude/
-CFLAGS=$(INCLUDES) -Wall -Werror -pedantic
+CFLAGS=$(INCLUDES) -Wall -Werror -pedantic -fPIC
 
 OBJ=objs/queue.o objs/stack.o objs/syard.o objs/tokenizer.o objs/rpn_calc.o
 OBJ_NONANSI=objs/run_function.o
