@@ -1,3 +1,6 @@
 [submodule "src/template/goatee"]
 	path = src/template/goatee
 	url = https://github.com/ohnx/goatee.git
+[submodule "dist/linenoise"]
+	path = dist/linenoise
+	url = https://github.com/antirez/linenoise.git

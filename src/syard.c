@@ -3,8 +3,9 @@
 
 static int map_operator_precendence(char a) {
     switch (a) {
-    case 'm': return 15;
+    case 'm':
     case '^': return 10;
+    case '!':
     case '*':
     case '/': return 6;
     case '+':
@@ -14,7 +15,9 @@ static int map_operator_precendence(char a) {
 }
 
 static int map_operator_associativity(char a) {
+    /* 0 for RTL, 1 for LTR */
     switch(a) {
+    case 'm':
     case '^': return 0;
     default: return 1;
     }
@@ -187,6 +190,12 @@ queue *syard_run(const char *in) {
             }
             break;
         case TOKEN_FUNCTION:
+            /* special case: last token was a number or rbracket and we have variable now */
+            if (tok_last == TOKEN_NUMBER || tok_last == TOKEN_RBRACKET) {
+                /* push a * sign with high precendence */
+                stack_push(s, (void *)&mul);
+            }
+
             len = strlen(tok);
             op = calloc(len + 2, sizeof(char));
             op[0] = '\0';

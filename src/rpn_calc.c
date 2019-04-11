@@ -96,6 +96,16 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*), char **fun
                 b = ((double *)(bv + 1));
                 c = 0-*b;
                 goto single;
+            case '!':
+                bv = (struct syard_var *)stack_pop(s);
+                if (bv == NULL) {
+                    free(bv);
+                    printf("! not enough values for operator `!`\n");
+                    goto err_cleanup;
+                }
+                b = ((double *)(bv + 1));
+                c = 0-*b;
+                goto single;
             default: break;
             }
 

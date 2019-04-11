@@ -18,7 +18,7 @@ void tokenizer_reset(tokenizer_ctx *ctx, char *ptr) {
     ctx->removed = 0;
 }
 
-static char operator_chars[] = {'+', '-', '/', '*', '^', 0};
+static char operator_chars[] = {'+', '-', '/', '*', '^', '!', 0};
 
 static int char_eq(char in, char *eq) {
     /* loop through array until 0 is reached */

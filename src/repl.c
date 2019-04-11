@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <time.h>
 #include <stdlib.h>
+
+#include "linenoise/linenoise.h"
+
 #include "queue.h"
 #include "syard.h"
 #include "rpn_calc.h"
@@ -11,8 +14,6 @@ static char *func_wl[] = {
     "exp10", "log", "log10", "log2", "logb", "pow", "sqrt", "cbrt", "hypot",
     "expm1", "log1p", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "erf",
     "erfc", "lgamma", "gamma", "tgamma", "j0", "j1", "y0", "y1", NULL};
-static char buf[513];
-static void *n;
 static hashmap *hm;
 
 #ifdef __DEBUG
@@ -20,7 +21,7 @@ static hashmap *hm;
 void testfunc(void *d, void *c) {
     switch(((struct syard_var *)d)->type) {
     case TYPE_DOUBLE:
-    printf("(n)%lf ", *((double *)((struct syard_var *)d + 1)));
+    printf("(n)%f ", *((double *)((struct syard_var *)d + 1)));
     break;
     case TYPE_CHAR:
     printf("(c)%c ", *((char *)((struct syard_var *)d + 1)));
@@ -56,7 +57,7 @@ double randd() {
 }
 
 int main() {
-    char *o, *p;
+    char *o, *p, *line;
     queue *q;
     double *r, *s;
     double *pi = malloc(sizeof(double));
@@ -72,18 +73,17 @@ int main() {
     hashmap_put(hm, "e", e);
     hashmap_put(hm, "ans", ans);
 
-    while (1) {
-        printf("> ");
-        n = fgets(buf, 512, stdin);
-        if (!n) break;
-        if (*buf == '\n') continue; /* skip if only newline */
+    /* read input using linenoise */
+    while((line = linenoise("> ")) != NULL) {
+        /* add the line to history */
+        linenoiseHistoryAdd(line);
 
         /* check if there is an equals sign */
-        for (p = buf; (*p != '\0') && (*p != '='); p++);
-        if (*p == '\0') p = buf;
+        for (p = line; (*p != '\0') && (*p != '='); p++);
+        if (*p == '\0') p = line;
         else { /* equals sign present */
             /* check for spaces */
-            for (o = buf; (*o != ' ') && (*o != '='); o++);
+            for (o = line; (*o != ' ') && (*o != '='); o++);
             *o = '\0';
 
             p++; /* skip equals sign when parsing equation */
@@ -104,24 +104,26 @@ int main() {
         /* store ans */
         *ans = *r;
 
-        if (p != buf) {
+        if (p != line) {
             /* equals sign present */
-            if ((s = hashmap_get(hm, buf)) != NULL) {
+            if ((s = hashmap_get(hm, line)) != NULL) {
                 /* existing value, just overwrite it */
                 *s = *r;
                 free(r);
             } else {
                 /* new value */
-                hashmap_put(hm, buf, r);
+                hashmap_put(hm, line, r);
             }
         } else {
             /* no equals sign, so we're done with the number now */
             free(r);
         }
+
+        /* free storage and stuff */
+        linenoiseFree(line);
     }
 
     hashmap_iterate(hm, hm_cleaner, NULL);
     hashmap_destroy(hm);
-    puts("");
     return 0;
 }

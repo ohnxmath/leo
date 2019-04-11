@@ -1,4 +1,4 @@
-INCLUDES=-Iinclude/
+INCLUDES=-Iinclude/ -Idist/
 CFLAGS=$(INCLUDES) -Wall -Werror -pedantic -fPIC
 
 OBJ=objs/queue.o objs/stack.o objs/syard.o objs/tokenizer.o objs/rpn_calc.o
@@ -38,8 +38,13 @@ clean:
 #                             COMMAND LINE STUFF                               #
 ################################################################################
 
-repl: $(OUTPUT) objs/repl.o objs/hashmap.o
-	$(CC) objs/repl.o objs/hashmap.o -L. -lleo -lm -ldl -o leo $(CFLAGS)
+dist/liblinenoise.a:
+	-@git submodule update --init --recursive
+	cd dist/linenoise; $(CC) -c -o linenoise.o linenoise.c -Wall -Werror
+	ar rcs dist/liblinenoise.a dist/linenoise/linenoise.o
+
+repl: $(OUTPUT) objs/repl.o objs/hashmap.o dist/liblinenoise.a
+	$(CC) objs/repl.o objs/hashmap.o -L. -lleo -lm -ldl -Ldist/ -llinenoise -o leo $(CFLAGS)
 
 .PHONY: drepl
 drepl: CFLAGS += -g -O0 -D__DEBUG
