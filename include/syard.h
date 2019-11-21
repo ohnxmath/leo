@@ -1,6 +1,8 @@
 #ifndef __SHUNTINGYARD_INC
 #define __SHUNTINGYARD_INC
 #include <stdlib.h>
+#include <stdio.h>
+#include "api.h"
 #include "queue.h"
 #include "stack.h"
 #include "tokenizer.h"
@@ -17,7 +19,7 @@ struct syard_var {
 };
 
 void *syard_create_double_raw(double nbr);
-queue *syard_run(const char *in);
+queue *syard_run(leo_api *ctx, const char *in);
 void syard_string_cleanup(void *d, void *c);
 void syard_queue_cleanup(void *d, void *c);
 

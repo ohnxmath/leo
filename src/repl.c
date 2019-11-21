@@ -4,17 +4,18 @@
 
 #include "linenoise/linenoise.h"
 
+#include "api.h"
 #include "queue.h"
 #include "syard.h"
 #include "rpn_calc.h"
 #include "hashmap.h"
 
-static char *func_wl[] = {
+/*static char *func_wl[] = {
     "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "exp", "exp2",
     "exp10", "log", "log10", "log2", "logb", "pow", "sqrt", "cbrt", "hypot",
     "expm1", "log1p", "sinh", "cosh", "tanh", "asinh", "acosh", "atanh", "erf",
     "erfc", "lgamma", "gamma", "tgamma", "j0", "j1", "y0", "y1", NULL};
-static hashmap *hm;
+*/static hashmap *hm;
 
 #ifdef __DEBUG
 /* simple wrapper around puts() to support queue_foreach */
@@ -63,6 +64,11 @@ int main() {
     double *pi = malloc(sizeof(double));
     double *e  = malloc(sizeof(double));
     double *ans = malloc(sizeof(double));
+    leo_api api;
+
+    api.variable_resolver = variable_resolver;
+    api.function_resolver = NULL;
+    api.error = NULL;
 
     *pi = 3.1415926535;
     *e  = 2.7182818285;
@@ -89,15 +95,23 @@ int main() {
             p++; /* skip equals sign when parsing equation */
         }
 
-        q = syard_run(p);
-        if (q == NULL) continue;
+        q = syard_run(&api, p);
+        if (q == NULL)  {
+            printf("! error: %s\n", api.error);
+            api.error = NULL;
+            continue;
+        }
 #ifdef __DEBUG
         queue_foreach(q, testfunc, NULL);
         printf("\n");
 #endif
 
-        r = rpn_calc(q, variable_resolver, func_wl);
-        if (r == NULL) continue;
+        r = rpn_calc(&api, q);
+        if (r == NULL) {
+            printf("! error: %s\n", api.error);
+            api.error = NULL;
+            continue;
+        }
 
         printf("= %g\n", *r);
 

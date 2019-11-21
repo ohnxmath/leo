@@ -7,6 +7,8 @@
 #include <signal.h>
 #include <string.h>
 
-double *run_function(const char *name, size_t argc, double *argv);
+#include "api.h"
+
+double *run_function(leo_api *ctx, const char *name, size_t argc, double *argv);
 
 #endif /* __RUNFUNC_INC */

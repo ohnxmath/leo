@@ -48,5 +48,5 @@ repl: $(OUTPUT) objs/repl.o objs/hashmap.o dist/liblinenoise.a
 
 .PHONY: drepl
 drepl: CFLAGS += -g -O0 -D__DEBUG
-drepl: debug objs/repl.o objs/hashmap.o
-	$(CC) objs/repl.o objs/hashmap.o -L. -lleo -lm -ldl -o leo $(CFLAGS)
+drepl: debug objs/repl.o objs/hashmap.o dist/liblinenoise.a
+	$(CC) objs/repl.o objs/hashmap.o -L. -lleo -lm -ldl -Ldist/ -llinenoise -o leo $(CFLAGS)

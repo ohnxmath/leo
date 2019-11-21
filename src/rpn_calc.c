@@ -17,7 +17,7 @@ int rpn_check_fwl(char *f, char **wl) {
     return 0;
 }
 
-double *rpn_calc(queue *in, double (*variable_resolver)(const char*), char **func_wl) {
+double *rpn_calc(leo_api *ctx, queue *in) {
     stack *s;
     struct syard_var *tok;
     int i;
@@ -32,13 +32,13 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*), char **fun
         } else if (tok->type == TYPE_VAR) { /* If the token is a variable, resolve its value now */
             /* Push it onto the stack. */
             char *vn = (char *)(tok + 1);
-            if (!variable_resolver) {
-                printf("! Variables not supported\n");
+            if (!(ctx->variable_resolver)) {
+                ctx->error = ESTR_NO_VARIRABLES;
                 goto err_cleanup;
             }
 
             /* Resolve the variable */
-            stack_push(s, syard_create_double_raw(variable_resolver(vn)));
+            stack_push(s, syard_create_double_raw(ctx->variable_resolver(vn)));
             /* free the memory used to store the token */
             free(tok);
         } else if (tok->type == TYPE_CHAR && *((char *)((struct syard_var *)tok + 1)) == ',') {
@@ -47,12 +47,6 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*), char **fun
             double *args, *nbr;
             struct syard_var *a;
 
-            /* check if function is allowed */
-            if (!rpn_check_fwl((char *)(((short *)(tok + 1)) + 1), func_wl)) {
-                printf("! function `%s` not whitelisted\n", ((char *)(((short *)(tok + 1)) + 1)));
-                goto err_cleanup;
-            }
-
             args = malloc(*((short *)(tok + 1)) * sizeof(double));
 
             for (i = *((short *)(tok + 1)) - 1; i >= 0; i--) {
@@ -60,7 +54,7 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*), char **fun
 
                 if (a == NULL) {
                     if (i == 0) break;
-                    printf("! not enough values for function `%s`\n", ((char *)(((short *)(tok + 1)) + 1)));
+                    ctx->error = ESTR_FUNC_INVALID_ARGS;
                     free(args);
                     goto err_cleanup;
                 }
@@ -69,7 +63,7 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*), char **fun
                 free((double *)a);
             }
 
-            nbr = run_function(((char *)(((short *)(tok + 1)) + 1)), *((short *)(tok + 1)), args);
+            nbr = run_function(ctx, ((char *)(((short *)(tok + 1)) + 1)), *((short *)(tok + 1)), args);
 
             if (nbr == NULL) {
                 free(args);
@@ -90,17 +84,18 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*), char **fun
                 bv = (struct syard_var *)stack_pop(s);
                 if (bv == NULL) {
                     free(bv);
-                    printf("! not enough values for operator `-`\n");
+                    ctx->error = ESTR_NOT_ENOUGH_NUMBERS;
                     goto err_cleanup;
                 }
                 b = ((double *)(bv + 1));
                 c = 0-*b;
                 goto single;
             case '!':
+                /* TODO: factorial */
                 bv = (struct syard_var *)stack_pop(s);
                 if (bv == NULL) {
                     free(bv);
-                    printf("! not enough values for operator `!`\n");
+                    ctx->error = ESTR_NOT_ENOUGH_NUMBERS;
                     goto err_cleanup;
                 }
                 b = ((double *)(bv + 1));
@@ -118,7 +113,7 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*), char **fun
                 /* (Error) The user has not input sufficient values in the expression. */
                 free(av);
                 free(bv);
-                printf("! not enough values for operator `%c`\n", *((char *)((struct syard_var *)tok + 1)));
+                ctx->error = ESTR_NOT_ENOUGH_NUMBERS;
                 goto err_cleanup;
             }
 
@@ -180,7 +175,7 @@ double *rpn_calc(queue *in, double (*variable_resolver)(const char*), char **fun
     
     /* Otherwise, there are more values in the stack */
     /* (Error) The user input has too many values. */
-    printf("! too many values inputted\n");
+    ctx->error = ESTR_TOO_MANY_NUMBERS;
     err_cleanup:
     free(tok);
     queue_foreach(in, syard_queue_cleanup, NULL);

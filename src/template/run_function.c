@@ -22,7 +22,7 @@ static void handler(int sig, siginfo_t *siginfo, void *arg) {
  * (aka our case :p)
  * further args are passed in the stack, which is not yet implemented.
  */
-double *run_function(const char *name, size_t argc, double *argv) {
+double *run_function(leo_api *ctx, const char *name, size_t argc, double *argv) {
     void *f, *handle;
     double ret, *rt;
     struct sigaction sa;
@@ -30,14 +30,14 @@ double *run_function(const char *name, size_t argc, double *argv) {
     /* open libm */
     handle = dlopen("libm.so.6", RTLD_LAZY);
     if (!handle) { /* verify success */
-        fprintf(stderr, "! failed to support calling functions: %s\n", dlerror());
+        ctx->error = ESTR_EXT_FUNC_LOAD;
         return NULL;
     }
 
     /* find the address of function */
     f = dlsym(handle, name);
     if (f == NULL) { /* verify success */
-        fprintf(stderr, "! failed to call function `%s`: %s\n", name, dlerror());
+        ctx->error = ESTR_EXT_FUNC_LOAD;
         dlclose(handle);
         return NULL;
     }
@@ -54,7 +54,7 @@ double *run_function(const char *name, size_t argc, double *argv) {
     /* catch error if setjmp() returns 1 */
     if (setjmp(point) == 1) {
         /* a segfault occurred */
-        fprintf(stderr, "! a segfault occurred while trying to call function %s(%zu)\n", name, argc);
+        ctx->error = ESTR_EXT_FUNC_SEGF;
         free(rt);
         dlclose(handle);
         return NULL;
