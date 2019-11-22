@@ -26,6 +26,7 @@ double *rpn_calc(leo_api *ctx, queue *in) {
             free(tok);
         } else if (tok->type == TYPE_CHAR && *((char *)((struct syard_var *)tok + 1)) == ',') {
             /* skip */
+            free(tok);
         } else if (tok->type == TYPE_FUNCTION) { /* if the token is a function, resolve its value now */
             double *args, *nbr;
             struct syard_var *a;

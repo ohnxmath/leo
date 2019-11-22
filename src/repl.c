@@ -95,8 +95,14 @@ void add_function(hashmap *functions, const char *name, queue *l, queue *r) {
         func = malloc(sizeof(struct function));
 
         /* add the function to the hashmap */
-        printf("adding function %s\n", name);
         hashmap_put(functions, name, func);
+    } else {
+        /* function exists, need to clear the old parts */
+        queue_foreach(func->left, syard_queue_cleanup, NULL);
+        queue_destroy(func->left);
+
+        queue_foreach(func->right, syard_queue_cleanup, NULL);
+        queue_destroy(func->right);
     }
 
     /* update the left and right parts */
@@ -201,9 +207,8 @@ double *calculate_function(void *ctx, struct function *func, size_t argc, double
     /* ... to calculate the right hand side */
     r = rpn_calc(&((repl->api)), func_rs);
     if (r == NULL) {
-        printf("! error: %s\n", (repl->api).error);
+        fprintf(stderr, "! error: %s\n", (repl->api).error);
         (repl->api).error = NULL;
-        return NULL;
     }
 
     /* clean up local variables (no need to free their storage because the
@@ -226,7 +231,7 @@ double *function_resolver(void *ctx, const char *name, size_t argc, double *argv
         nbr_ptr = run_function(&(((struct repl *)ctx)->api), name, argc, argv);
         if (nbr_ptr != NULL) return nbr_ptr;
         else {
-            printf("! error calling function %s: %s\n", name, (((struct repl *)ctx)->api).error);
+            fprintf(stderr, "! error calling function %s: %s\n", name, (((struct repl *)ctx)->api).error);
             (((struct repl *)ctx)->api).error = NULL;
             return NULL;
         }
@@ -235,7 +240,6 @@ double *function_resolver(void *ctx, const char *name, size_t argc, double *argv
     /* now check if it's in the function hashmap */
     if ((func = (struct function *)hashmap_get(((struct repl *)ctx)->functions, name)) != NULL) {
         /* found a function */
-        printf("found function!\n");
         return calculate_function(ctx, func, argc, argv);
     }
 
@@ -300,7 +304,7 @@ int main() {
             /* left side */
             ls = syard_run(&(repl_ctx.api), line);
             if (!ls)  {
-                printf("! error: %s\n", repl_ctx.api.error);
+                fprintf(stderr, "! error: %s\n", repl_ctx.api.error);
                 repl_ctx.api.error = NULL;
                 goto loop_done;
             }
@@ -309,7 +313,7 @@ int main() {
         /* right side */
         rs = syard_run(&(repl_ctx.api), p);
         if (!rs)  {
-            printf("! error: %s\n", repl_ctx.api.error);
+            fprintf(stderr, "! error: %s\n", repl_ctx.api.error);
             repl_ctx.api.error = NULL;
             goto loop_done;
         }
@@ -338,9 +342,6 @@ int main() {
                 }
             }
 
-            /* this was a function */
-            printf("function instead; do not evaluate\n");
-
             /* add the function */
             add_function(repl_ctx.functions, ((char *)(((short *)((struct syard_var *)queue_last(ls) + 1)) + 1)), ls, rs);
             rs = NULL;
@@ -351,7 +352,7 @@ int main() {
         invalid_ls:
             queue_foreach(ls, syard_queue_cleanup, NULL);
             queue_destroy(ls);
-            printf("unrecognized left hand side!");
+            fprintf(stderr, "! unrecognized left hand side\n");
 
             /* done with the loop */
             goto loop_done;
