@@ -1,22 +1,5 @@
 #include "rpn_calc.h"
 
-int rpn_check_fwl(char *f, char **wl) {
-    /* empty whitelist, no functions allowed */
-    if (wl == NULL) return 0;
-
-    /* check wildcard */
-    if (*(*wl) == '*') return 1;
-
-    /* loop while the elements aren't null */
-    while (*wl != NULL) {
-        /* check if the strings are equal, and if yes, return allowed */
-        if (!strcmp(*(wl++), f)) return 1;
-    }
-
-    /* default: function not found, deny */
-    return 0;
-}
-
 double *rpn_calc(leo_api *ctx, queue *in) {
     stack *s;
     struct syard_var *tok;
@@ -38,7 +21,7 @@ double *rpn_calc(leo_api *ctx, queue *in) {
             }
 
             /* Resolve the variable */
-            stack_push(s, syard_create_double_raw(ctx->variable_resolver(vn)));
+            stack_push(s, syard_create_double_raw(ctx->variable_resolver(ctx->variable_resolver_ctx, vn)));
             /* free the memory used to store the token */
             free(tok);
         } else if (tok->type == TYPE_CHAR && *((char *)((struct syard_var *)tok + 1)) == ',') {
@@ -46,6 +29,10 @@ double *rpn_calc(leo_api *ctx, queue *in) {
         } else if (tok->type == TYPE_FUNCTION) { /* if the token is a function, resolve its value now */
             double *args, *nbr;
             struct syard_var *a;
+            if (!(ctx->function_resolver)) {
+                ctx->error = ESTR_NO_FUNCTIONS;
+                goto err_cleanup;
+            }
 
             args = malloc(*((short *)(tok + 1)) * sizeof(double));
 
@@ -63,7 +50,7 @@ double *rpn_calc(leo_api *ctx, queue *in) {
                 free((double *)a);
             }
 
-            nbr = run_function(ctx, ((char *)(((short *)(tok + 1)) + 1)), *((short *)(tok + 1)), args);
+            nbr = ctx->function_resolver(ctx->function_resolver_ctx, ((char *)(((short *)(tok + 1)) + 1)), *((short *)(tok + 1)), args);
 
             if (nbr == NULL) {
                 free(args);

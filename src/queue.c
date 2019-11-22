@@ -70,6 +70,10 @@ void queue_foreach(queue *q, void (*f)(void *,void *), void *c) {
         f(q->queue[i], c);
 }
 
+void *queue_last(queue *q) {
+    return q->queue[q->queue_len-1];
+}
+
 /* debug code - to use, compile with
  * `gcc src/queue.c -Iinclude/ -Wall -Werror -g -ansi -pedantic -D__QUEUE_DEBUG` */
 #ifdef __QUEUE_DEBUG

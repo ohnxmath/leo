@@ -32,6 +32,8 @@ char *strdup(const char *a) {
     size_t len;
     char *dup;
 
+    if (!a) return NULL;
+
     len = strlen(a) + 1;
     dup = malloc(sizeof(char) * len);
     if (!dup) return dup;
@@ -189,7 +191,7 @@ queue *syard_run(leo_api *ctx, const char *in) {
             }
             break;
         case TOKEN_FUNCTION:
-            /* special case: last token was a number or rbracket and we have variable now */
+            /* special case: last token was a number or rbracket and we have function now */
             if (tok_last == TOKEN_NUMBER || tok_last == TOKEN_RBRACKET) {
                 /* push a * sign with high precendence */
                 stack_push(s, (void *)&mul);
