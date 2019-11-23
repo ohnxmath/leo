@@ -99,7 +99,7 @@ queue *syard_run(leo_api *ctx, const char *in) {
     tokenizer_ctx *tkc;
     char *tok, *op, *newstr;
     tokenizer_type tok_last = TOKEN_LBRACKET;
-    char comma = ',', mul = '*';
+    char mul = '*';
     int *arn;
 
     s = stack_new();
@@ -214,7 +214,6 @@ queue *syard_run(leo_api *ctx, const char *in) {
                 queue_enqueue(q, create_char_data(*(char *)stack_pop(s)));
             }
             if (*op == ',') stack_pop(s);
-            stack_push(s, &comma);
 
             arn = stack_pop(arity);
             (*arn)++;
