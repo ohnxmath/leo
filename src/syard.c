@@ -213,6 +213,10 @@ queue *syard_run(leo_api *ctx, const char *in) {
                 /* pop operators from the operator stack onto the output queue. */
                 queue_enqueue(q, create_char_data(*(char *)stack_pop(s)));
             }
+            if (!op) {
+                ctx->error = ESTR_DANGLING_OPERATOR;
+                goto err_cleanup;
+            }
             if (*op == ',') stack_pop(s);
 
             arn = stack_pop(arity);
@@ -257,7 +261,7 @@ queue *syard_run(leo_api *ctx, const char *in) {
     free(newstr);
     return q;
 
-    err_cleanup:
+err_cleanup:
     stack_foreach(s, syard_string_cleanup, NULL);
     stack_destroy(s);
     stack_foreach(arity, syard_queue_cleanup, NULL);

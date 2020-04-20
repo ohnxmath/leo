@@ -11,6 +11,7 @@
 #define ESTR_NO_VARIRABLES "variables not supported"
 #define ESTR_NO_FUNCTIONS "function calls not supported"
 #define ESTR_FUNC_NOT_FOUND "function not found"
+#define ESTR_DANGLING_OPERATOR "dangling operator"
 #define ESTR_FUNC_INVALID_ARGS "invalid number of arguments to function"
 #define ESTR_NOT_ENOUGH_NUMBERS "not enough values for operator; missing number"
 #define ESTR_TOO_MANY_NUMBERS "too many values given; missing operator"
