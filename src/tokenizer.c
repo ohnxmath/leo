@@ -18,7 +18,8 @@ void tokenizer_reset(tokenizer_ctx *ctx, char *ptr) {
     ctx->removed = 0;
 }
 
-static char operator_chars[] = {'+', '-', '/', '*', '^', '!', 0};
+static char operator_chars[] = {'+', '-', '/', '*', '^', 0};
+static char ternary_chars[] = {'?', ':', 0};
 
 static int char_eq(char in, char *eq) {
     /* loop through array until 0 is reached */
@@ -75,6 +76,10 @@ char *tokenizer_next(tokenizer_ctx *ctx) {
         /* pass the operator char and set type */
         pos++;
         ctx->type = TOKEN_OPERATOR;
+    } else if (char_eq(*pos, ternary_chars)) { /* ternary */
+        /* pass the ternary char and set type */
+        pos++;
+        ctx->type = TOKEN_TERNARY;
     } else if (*pos == '\0') { /* end */
         ctx->type = TOKEN_END;
         return NULL;
@@ -86,6 +91,7 @@ char *tokenizer_next(tokenizer_ctx *ctx) {
         /* keep going until we reach an open bracket to signify the start
            of a function, or a space/operator char to signify a variable*/
         while (*pos != 0 && !char_eq(*pos, operator_chars)
+                && !char_eq(*pos, ternary_chars)
                 && !char_eq(*pos, "(), ")) pos++;
 
         if (*pos == '(') {

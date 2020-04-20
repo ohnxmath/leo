@@ -4,11 +4,21 @@ double *rpn_calc(leo_api *ctx, queue *in) {
     stack *s;
     struct syard_var *tok;
     int i;
+    int consume_ternary = 0;
 
     s = stack_new();
 
     /* While there are input tokens left; Read the next token from input. */
     while ((tok = (struct syard_var *)queue_dequeue(in)) != NULL) {
+        if (consume_ternary) {
+            if (tok->type == TYPE_CHAR &&
+                *((char *)((struct syard_var *)tok + 1)) == ':') {
+                consume_ternary--;
+            }
+            free(tok);
+            continue;
+        }
+
         if (tok->type == TYPE_DOUBLE) { /* If the token is a value */
             /* Push it onto the stack. */
             stack_push(s, tok);
@@ -16,7 +26,7 @@ double *rpn_calc(leo_api *ctx, queue *in) {
             /* Push it onto the stack. */
             char *vn = (char *)(tok + 1);
             if (!(ctx->variable_resolver)) {
-                ctx->error = ESTR_NO_VARIRABLES;
+                ctx->error = ESTR_NO_VARIABLES;
                 goto err_cleanup;
             }
 
@@ -66,20 +76,42 @@ double *rpn_calc(leo_api *ctx, queue *in) {
             struct syard_var *av, *bv;
             double *a, *b, c;
 
-            /* unary operators check first */
-            switch (*((char *)((struct syard_var *)tok + 1))) {
-            case 'm':
-                bv = (struct syard_var *)stack_pop(s);
-                if (bv == NULL) {
-                    free(bv);
+            /* ternary operator check first */
+            if (*((char *)((struct syard_var *)tok + 1)) == '?') {
+                /* start of a ternary operator! */
+                /* get the number on the top of the stack */
+                av = (struct syard_var *)stack_pop(s);
+                if (av == NULL) {
+                    /* (Error) The user has not input sufficient values in the expression. */
+                    free(av);
                     ctx->error = ESTR_NOT_ENOUGH_NUMBERS;
                     goto err_cleanup;
                 }
-                b = ((double *)(bv + 1));
-                c = 0-*b;
-                goto single;
-            case '!':
-                /* TODO: factorial */
+
+                /* check what its value is */
+                if (*((double *)(av + 1)) == 0) {
+                    /* false, so skip until the colon is reached */
+                    consume_ternary++;
+                } else {
+                    /* true, so keep executing as normal */
+                }
+
+                free(av);
+                free(tok);
+                continue;
+            } else if (*((char *)((struct syard_var *)tok + 1)) == ':') {
+                /* reached a colon, so we are done! */
+                /* clean up the queue */
+                queue_foreach(in, syard_queue_cleanup, NULL);
+
+                /* all done! */
+                free(tok);
+                break;
+            }
+
+            /* unary operators check next */
+            switch (*((char *)((struct syard_var *)tok + 1))) {
+            case 'm':
                 bv = (struct syard_var *)stack_pop(s);
                 if (bv == NULL) {
                     free(bv);
@@ -138,6 +170,12 @@ double *rpn_calc(leo_api *ctx, queue *in) {
             /* Push the returned results, if any, back onto the stack. */
             stack_push(s, syard_create_double_raw(c));
         }
+    }
+
+    /* check if we were still looking for a : */
+    if (consume_ternary) {
+        ctx->error = ESTR_MISSING_TERNARY_END;
+        goto err_cleanup;
     }
 
     /* If there is only one value in the stack */
