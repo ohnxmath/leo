@@ -10,7 +10,6 @@ typedef enum _tokenizer_type {
     TOKEN_FUNCTION,
     TOKEN_COMMA,
     TOKEN_VARIABLE,
-    TOKEN_TERNARY,
     TOKEN_END,
     TOKEN_UNKNOWN
 } tokenizer_type;

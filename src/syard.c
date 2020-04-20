@@ -4,6 +4,7 @@ static int map_operator_precendence(char a) {
     switch (a) {
     case 'm':
     case '^': return 10;
+    case '!':
     case '*':
     case '/': return 6;
     case '+':
@@ -120,15 +121,6 @@ queue *syard_run(leo_api *ctx, const char *in) {
                 stack_push(s, (void *)&mul);
             }
             queue_enqueue(q, syard_create_double(tok));
-            break;
-        /* if the token is a ternary operator, then: */
-        case TOKEN_TERNARY:
-            /* while the operator at the top of the operator stack is not a left bracket: */
-            while (((op = stack_top(s)) != NULL) && *op != '(') {
-                /* pop operators from the operator stack onto the output queue. */
-                queue_enqueue(q, create_char_data(*(char *)stack_pop(s)));
-            }
-            queue_enqueue(q, create_char_data(*tok));
             break;
         /* if the token is an operator, then: */
         case TOKEN_OPERATOR:
